@@ -1,0 +1,256 @@
+add this one to top: 
+\text\documentclass[sigconf]{acmart}
+% Remove copyright information
+\setcopyright{none}
+\settopmatter{printacmref=false}
+% Package imports
+\usepackage{booktabs}
+\usepackage{ccicons}
+\usepackage{listings}
+% Configure listings for better formatting
+\lstset{
+    basicstyle=\footnotesize\ttfamily,
+    breaklines=true,
+    breakatwhitespace=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny,
+    showstringspaces=false,
+    tabsize=2
+}
+% Title and authors
+\title{CS-E4780 Scalable Systems and Data Management Course Project\\
+Efficient Pattern Detection over Data Stream}
+\author{Linh Van Nguyen}
+\affiliation{%
+  \institution{Aalto University}
+  \city{Espoo}
+  \country{Finland}
+}
+\email{linh.10.nguyen@aalto.fi}
+\author{Prof. Bo Zhao}
+\authornote{Supervisor. Responsible Teacher}
+\affiliation{%
+  \institution{Aalto University}
+  \city{Espoo}
+  \country{Finland}
+}
+\email{bo.zhao@aalto.fi}
+
+
+* add references to 1 file main only, do not need to split
+* experiement, main table only show overall precision, accuracy of both max retries 1, 3
+additional table to break the query performance, no need to merge
+* highlights the key contributions in introduction, and write longer introduction
+* add some technique in report: use framework pydantic to manage LLM, to call multiprocess, to evaluate based on this framework
+
+
+Project Requirements and Problem Definition
+This course project is designed to help students become famil-
+iar with building a graph-based Retrieval-Augmented Generation
+(RAG) system using the Nobel Laureates dataset with Kuzu. The
+starting codebase is [1]. Please follow the README to run the
+scripts. As a first step, students are expected to run and examine the
+provided demo workflow to gain an understanding of the different
+modules and their interactions. The project is organized into the
+following tasks:
+Task 1. Text2Cypher Improvement Students will extend the
+Text2Cypher component with the following enhancements:
+•Dynamically select few-shot exemplars based on similarity
+to the input question.
+•Implement a self-refinement loop: generate →validate (syn-
+tax check using a dry-run EXPLAIN) →repair if validation
+fails.
+•Add a rule-based post-processor (e.g., enforce lowercase com-
+parisons, ensure proper property projection).
+Learning outcome: Gain hands-on experience with prompt engineer-
+ing and iterative query generation.
+Task 2. Caching & Performance Students will focus on im-
+proving system efficiency through:
+•Adding an LRU cache to support pruning and caching of
+Text2Cypher results (keyed by question hash and schema
+hash).
+•Benchmarking pipeline latency at the granularity of individ-
+ual stages.
+•Producing a flamegraph or simple timing breakdown to vi-
+sualize performance.
+Figure 1: Comparision between Direct LLM, RAG, and GraphRAG. Given a user query, direct answering by LLMs may suffer from
+shallow responses or lack of specificity. RAG addresses this by retrieving relevant textual information, somewhat alleviating
+the issue. However, due to the text’s length and flexible natural language expressions of entity relationships, RAG struggles to
+emphasize “influence” relations, which is the core of the question. While, GraphRAG methods leverage explicit entity and
+relationship representations in graph data, enabling precise answers by retrieving relevant structured information.
+graphs. Learn the optimization techniques in GraphRAG systems
+over real-world datasets.
+Project Report Requirements
+Template. Use the ACM Proceeding Template: L A T EX1 or Word 2
+.
+Report Organization. The report should be min 4 pages and include
+the following sections. Students may use their own section titles,
+but the content should align with the following structure:
+(1) Abstract.
+(2) Introduction. Provide a brief background and overview of
+the project.
+Learning outcome: Understand the end-to-end GraphRAG pipeline.
+Develope the ability to enhance the LLM inference with knowledge
+1https://www.overleaf.com/latex/templates/acm-hypertext-conference-
+template/pchbkqfnmxgr
+2https://www.acm.org/binaries/content/assets/publications/word_style/interim-
+template-style/interim-layout.docx
+(3) System Architecture. Describe the design choices and mo-
+tivations in detail.
+(4) Implementation. Explain how the project was implemented,
+including the hardware/cloud services, programming tools,
+and GUI tools used.
+(5) Evaluation. For Task 1, students should report the cho-
+sen algorithmic designs and the resulting accuracy improve-
+ments. For Task 2, students should describe the data struc-
+tures used, quantify the performance speed-ups achieved,
+and present the execution times of each stage in the graph
+RAG pipeline.
+
+
+My results: 
+What I was doing
+____________________________________
+-- Update data into db
+-- Complete implement LLM GraphRAG Chat with Text2Cypher + LLM Answers
+
+____________________________________
+-- Complete LLM Evaluation -- LLM Judge multiple steps
+1. Verify Query
+-- Compare the gold context and context from Text2Cypher (if context from T2C cover all gold context -> 1 else 0)
+
+2. Full Answer
+-- LLM Judge (don't prevent the fixed format in output, can answer by any thing, just need LLLM Judge)
+Example: 
+Question: Who was the first woman to win the Nobel Prize in Medicine?
+Gold Answer: Gerty Cori
+Model 1 Answer: She is Gerty Theresa Cori, née Radnitz -> True
+Model 2 Answer: Marie Curie -> False
+Model 3 Answer: I don't have enough information to answer this question. -> not attempt
+
+____________________________________
+--Multihop for query formulations
+- apply max retries when LLM generate Cypher Query
+
+____________________________________
+--Build Benchmark set
+- Combine from wiki data sources for nobel prizes, manual check with current database
+- Sample to 9 query-answer pairs
+- Paraphrase query (same answer) to extend benchmark set + see the different when use LRU-cache
+
+
+Result: 
+________________
+Max attempt 1: 
+gemini-2.5-flash
+{'query_analyse': {'true': 20, 'false': 11, 'no_attempt': 0, 'accuracy': 0.6451612903225806, 'precision': 0.6451612903225806}, 'overall_analyse': {'true': 21, 'false': 2, 'no_attempt': 8, 'accuracy': 0.6774193548387096, 'precision': 0.9130434782608695}}
+avg time:  17.3s 
+
+gpt-5
+{'query_analyse': {'true': 20, 'false': 16, 'no_attempt': 0, 'accuracy': 0.5555555555555556, 'precision': 0.5555555555555556}, 'overall_analyse': {'true': 25, 'false': 3, 'no_attempt': 8, 'accuracy': 0.6944444444444444, 'precision': 0.8928571428571429}}
+avg time: 53.9s 
+
+gpt-5-mini
+{'query_analyse': {'true': 26, 'false': 10, 'no_attempt': 0, 'accuracy': 0.7222222222222222, 'precision': 0.7222222222222222}, 'overall_analyse': {'true': 30, 'false': 1, 'no_attempt': 5, 'accuracy': 0.8333333333333334, 'precision': 0.967741935483871}}
+avg time: 32.4s 
+
+gpt-4.1
+{'query_analyse': {'true': 19, 'false': 14, 'no_attempt': 0, 'accuracy': 0.5757575757575758, 'precision': 0.5757575757575758}, 'overall_analyse': {'true': 25, 'false': 2, 'no_attempt': 6, 'accuracy': 0.7575757575757576, 'precision': 0.9259259259259259}}
+avg time: 8.0s
+
+gpt-4.1-mini
+{'query_analyse': {'true': 18, 'false': 18, 'no_attempt': 0, 'accuracy': 0.5, 'precision': 0.5}, 'overall_analyse': {'true': 23, 'false': 3, 'no_attempt': 10, 'accuracy': 0.6388888888888888, 'precision': 0.8846153846153846}}
+avg time:  7.0s
+
+
+
+________________
+Max attempt 3:
+gemini-2.5-flash
+{'query_analyse': {'true': 18, 'false': 10, 'no_attempt': 0, 'accuracy': 0.6428571428571429, 'precision': 0.6428571428571429}, 'overall_analyse': {'true': 22, 'false': 2, 'no_attempt': 4, 'accuracy': 0.7857142857142857, 'precision': 0.9166666666666666}}
+20.2s
+
+
+gpt-5
+{'query_analyse': {'true': 21, 'false': 15, 'no_attempt': 0, 'accuracy': 0.5833333333333334, 'precision': 0.5833333333333334}, 'overall_analyse': {'true': 30, 'false': 4, 'no_attempt': 2, 'accuracy': 0.8333333333333334, 'precision': 0.8823529411764706}}
+75.4s
+
+
+gpt-5-mini
+'accuracy': 0.8055555555555556, 'precision': 0.8055555555555556}, 'overall_analyse': {'true': 32, 'false': 3, 'no_attempt': 1, 'accuracy': 0.8888888888888888, 'precision': 0.9142857142857143}}
+ 37.3s
+
+gpt-4.1
+{'query_analyse': {'true': 25, 'false': 10, 'no_attempt': 0, 'accuracy': 0.7142857142857143, 'precision': 0.7142857142857143}, 'overall_analyse': {'true': 31, 'false': 2, 'no_attempt': 2, 'accuracy': 0.8857142857142857, 'precision': 0.9393939393939394}}
+9.5s
+
+gpt-4.1-mini
+{'query_analyse': {'true': 28, 'false': 6, 'no_attempt': 0, 'accuracy': 0.8235294117647058, 'precision': 0.8235294117647058}, 'overall_analyse': {'true': 31, 'false': 2, 'no_attempt': 1, 'accuracy': 0.9117647058823529, 'precision': 0.9393939393939394}}
+ 8.0s
+
+
+
+''''
+Bonus: 
+Apply LRU Cache in Question
+Apply LRU Cache in Cypher Query 
+For application only, do not report number here for better comparison
+
+
+Prompt
+    system_prompt="""
+    Understand the given labelled property graph schema and the given user question. Your task
+    is to return ONLY the subset of the schema (node labels, edge labels and properties) that is
+    relevant to the question.
+        - The schema is a list of nodes and edges in a property graph.
+        - The nodes are the entities in the graph.
+        - The edges are the relationships between the nodes.
+        - Properties of nodes and edges are their attributes, which helps answer the question.
+    
+    Return a JSON object with 'nodes' and 'edges' arrays matching the GraphSchema structure.
+    """
+
+text2cypher_agent
+ system_prompt="""
+    Translate the question into a valid Cypher query that respects the graph schema.
+
+    <SYNTAX>
+    - When matching on Scholar names, ALWAYS match on the `knownName` property
+    - For countries, cities, continents and institutions, you can match on the `name` property
+    - Use short, concise alphanumeric strings as names of variable bindings (e.g., `a1`, `r1`, etc.)
+    - Always strive to respect the relationship direction (FROM/TO) using the schema information.
+    - When comparing string properties, ALWAYS do the following:
+        - Lowercase the property values before comparison
+        - Use the WHERE clause
+        - Use the CONTAINS operator to check for presence of one substring in the other
+    - DO NOT use APOC as the database does not support it.
+    </SYNTAX>
+
+    <RETURN_RESULTS>
+    - If the result is an integer, return it as an integer (not a string).
+    - When returning results, return property values rather than the entire node or relationship.
+    - Do not attempt to coerce data types to number formats (e.g., integer, float) in your results.
+    - NO Cypher keywords should be returned by your query.
+    </RETURN_RESULTS>
+    
+    Return a JSON object with a 'query' field containing the Cypher query as a single line string.
+    """
+
+Fallback text 2 cypher prompt bonus
+        if previous_attempts:
+            prompt += "\n\n### Previous Failed Attempts ###"
+            for i, attempt in enumerate(previous_attempts):
+                prompt += f"\n\nAttempt {i}:"
+                prompt += f"\nGenerated Query: {attempt['query']}"
+                prompt += f"\nError/Issue: {attempt['error']}"
+            prompt += "\n\nPlease learn from these failures and generate a corrected query that addresses all the issues above."
+
+answer prompt
+ system_prompt="""
+    - Use the provided question, the generated Cypher query and the context to answer the question.
+    - If the context is empty, state that you don't have enough information to answer the question.
+    - When dealing with dates, mention the month in full.
+    
+    Return a JSON object with a 'response' field containing your answer.
+    """

@@ -1,0 +1,119 @@
+[
+  {
+    "typeOfQuestion": "first / last / historical",
+    "answer": "Gerty Cori.",
+    "expected_query": "MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE toLower(s.gender) CONTAINS 'female' AND toLower(p.category) CONTAINS 'medicine' RETURN s.knownName ORDER BY p.awardYear ASC LIMIT 1",
+    "source": "https://en.wikipedia.org/wiki/List_of_Nobel_laureates_in_Physiology_or_Medicine",
+    "context": ["Gerty Theresa Cori, née Radnitz"],
+    "questions": [
+      "Who was the first woman to win the Nobel Prize in Medicine?",
+      "Which female scientist broke the gender barrier by becoming the inaugural woman laureate in the field of Medicine?",
+      "Can you name the pioneering woman who claimed the first-ever Nobel Prize awarded to a female in the medical sciences?",
+      "What was the name of the trailblazing female researcher who earned Medicine's first Nobel Prize for a woman?"
+    ]
+  },
+  {
+    "typeOfQuestion": "category / breakdown",
+    "answer": "12 women.",
+    "expected_query": "MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE (toLower(s.gender) CONTAINS 'female' OR toLower(s.gender) CONTAINS 'woman') AND toLower(p.category) CONTAINS 'medicine' AND p.awardYear <= 2022 RETURN count(DISTINCT s) AS count",
+    "source": "https://en.wikipedia.org/wiki/List_of_female_Nobel_laureates",
+    "context": [12],
+    "questions": [
+      "How many women had received the Nobel Prize in Medicine by 2022?",
+      "What's the total count of female laureates who've been honored with the Medicine Nobel through the end of 2022?",
+      "By the time 2022 concluded, how many women had been recognized with Nobel Prizes in Physiology or Medicine?",
+      "Up until 2022, what number of female scientists received the prestigious Nobel in the medical field?"
+    ]
+  },
+  {
+    "typeOfQuestion": "ranking / comparison",
+    "answer": "Europe.",
+    "expected_query": " MATCH (s:Scholar)-[:WON]->(p:Prize),(s)-[:BORN_IN]->(c:City)-[:IS_CITY_IN]->(co:Country)-[:IS_COUNTRY_IN]->(cn:Continent) WHERE p.awardYear <= 2022 WITH cn.name AS continent, count(DISTINCT s.id) AS total ORDER BY total DESC LIMIT 1 RETURN continent",
+    "source": "https://en.wikipedia.org/wiki/List_of_Nobel_laureates_by_country",
+    "context": ["Europe"],
+    "questions": [
+      "Which continent had the highest total number of laureates up to 2022?",
+      "Looking at the geographic distribution of Nobel Prize winners through 2022, which continental region produced the most laureates?",
+      "What continent can claim the greatest number of Nobel Prize recipients by the year 2022?",
+      "Through 2022, which of Earth's continents dominated in terms of total Nobel laureates born within its borders?"
+    ]
+  },
+  {
+    "typeOfQuestion": "ranking / comparison",
+    "answer": "The United States.",
+    "expected_query": "MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE p.awardYear <= 2022 MATCH (s)-[:BORN_IN]->(c:City)-[:IS_CITY_IN]->(co:Country) WITH co.name AS country, count(DISTINCT s.id) AS laureateCount ORDER BY laureateCount DESC LIMIT 1 RETURN country, laureateCount",
+    "source": "https://en.wikipedia.org/wiki/List_of_Nobel_laureates_by_country",
+     "context": ["usa"],
+    "questions": [
+      "Which country had the most Nobel laureates up to 2022?",
+      "What nation has produced the largest number of Nobel Prize winners throughout history up to 2022?",
+      "By 2022, which country's citizens had claimed the highest total of Nobel Prizes?",
+      "Looking at national origins of laureates through 2022, which country leads the world in Nobel Prize recipients?"
+    ]
+  },
+  {
+    "typeOfQuestion": "unique / special fact",
+    "answer": "Linus Pauling.",
+    "expected_query": "MATCH (s:Scholar)-[:WON]->(p1:Prize), (s)-[:WON]->(p2:Prize) WHERE toLower(p1.category) CONTAINS toLower('chemistry') AND toLower(p2.category) CONTAINS toLower('peace') RETURN DISTINCT s.knownName",
+    "source": "https://en.wikipedia.org/wiki/List_of_multiple_Nobel_laureates",
+    "context": ["Linus Carl Pauling"],
+    "questions": [
+      "Which Nobel laureate is the only person to win in both Chemistry and Peace?",
+      "Who holds the unique distinction of receiving Nobel recognition in both the scientific field of Chemistry and the humanitarian category of Peace?",
+      "Can you identify the sole individual who's been awarded Nobel Prizes in two very different domains: Chemistry and Peace?",
+      "What's the name of the only laureate who bridged the gap between laboratory science and global diplomacy by winning Nobels in both Chemistry and Peace?"
+    ]
+  },
+  {
+    "typeOfQuestion": "unique / special fact",
+    "answer": "Marie Curie (Physics 1903, Chemistry 1911).",
+    "expected_query": "MATCH (s:Scholar)-[:WON]->(p2:Prize) WITH s, p2.awardYear AS y2 MATCH (s)-[:WON]->(p1:Prize) WHERE p1.awardYear < y2 WITH s, y2, count(DISTINCT p1) AS lessCount WHERE lessCount = 1 WITH s, min(y2) AS secondYear ORDER BY secondYear ASC LIMIT 1 RETURN s.knownName AS knownName",
+    "source": "https://en.wikipedia.org/wiki/List_of_Nobel_laureates",
+    "context": ["Marie Curie"],
+    "questions": [
+      "Who was the first laureate to receive two Nobel Prizes?",
+      "Which scientist made history by becoming the inaugural recipient of Nobel Prizes on two separate occasions?",
+      "Who was the pioneer in winning multiple Nobel Prizes, being the very first person to achieve this remarkable feat?",
+      "Can you name the groundbreaking individual who set the precedent by winning not one, but two Nobel Prizes?"
+    ]
+  },
+  {
+    "typeOfQuestion": "unique / special fact",
+    "answer": "Albert Einstein won 1 award: Physics prize awarded in 1921",
+    "expected_query": "   MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE toLower(s.knownName) CONTAINS toLower('Albert Einstein') RETURN count(DISTINCT p) AS awardCount, collect(DISTINCT {prize_id: p.prize_id, category: p.category, awardYear: p.awardYear}) AS awards",
+    "source": "https://en.wikipedia.org/wiki/List_of_Nobel_laureates_in_Physics",
+    "context": [1, ["physics"]],
+    "questions": [
+      "How many awards that Albert Einstein win, what are they?",
+      "What's the total number of Nobel Prizes earned by Albert Einstein, and in which categories did he receive recognition?",
+      "Can you tell me how many times Einstein was honored with a Nobel Prize and specify which field(s) he won in?",
+      "Looking at Einstein's Nobel Prize record, how many did he actually win and what were the categories and years?"
+    ]
+  },
+  {
+    "typeOfQuestion": "unique / special fact",
+    "answer": "Yes — he won the Nobel Prize in 1918.",
+    "expected_query": "   MATCH (s:Scholar) WHERE toLower(s.knownName) CONTAINS 'max planck' OPTIONAL MATCH (s)-[:WON]->(p:Prize) WITH s, collect(DISTINCT p.awardYear) AS yrs, count(p) AS c RETURN CASE WHEN c > 0 THEN true ELSE false END AS hasNobel, yrs AS awardYears",
+    "source": "https://en.wikipedia.org/wiki/List_of_Nobel_laureates_in_Physics",
+    "context": [1918],
+    "questions": [
+      "Max Planck is the famous German scientist. He is named for a reputable institution now. He has Nobel Prize or not, and if yes when?",
+      "The renowned German physicist Max Planck, whose name graces a prestigious scientific institution today—did he ever receive a Nobel Prize, and if so, in what year?",
+      "Max Planck, the celebrated German scientist with an institute bearing his name—was he a Nobel laureate, and if yes, when was he honored?",
+      "Regarding the distinguished German scientist Max Planck (who has a famous institution named after him)—can you confirm whether he won a Nobel Prize and identify the year?"
+    ]
+  },
+  {
+    "typeOfQuestion": "unique / special fact",
+    "answer": "The Nobel Laureates in 2010 were Andre Geim, Robert G. Edwards, Ei-ichi Negishi, Richard F. Heck, Peter A. Diamond, Akira Suzuki, Dale T. Mortensen, Konstantin Novoselov, and Christopher A. Pissarides.",
+    "expected_query": "   MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE p.awardYear = 2010 RETURN s.knownName",
+    "source": "",
+    "context": ["Andre Geim", "Robert G. Edwards", "Ei-ichi Negishi", "Richard F. Heck", "Peter A. Diamond", "Akira Suzuki", "Dale T. Mortensen", "Konstantin Novoselov", "Christopher A. Pissarides"],
+    "questions": [
+      "List all Nobel Laureates in 2010",
+      "Can you provide a complete roster of every individual who received a Nobel Prize during the year 2010?",
+      "Who were all the scientists and other recipients honored with Nobel Prizes in 2010?",
+      "Give me the full lineup of Nobel Prize winners from 2010 across all categories."
+    ]
+  }
+]

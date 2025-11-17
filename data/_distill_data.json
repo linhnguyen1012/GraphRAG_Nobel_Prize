@@ -1,0 +1,74 @@
+[
+  {
+    "question": "Who was the first woman to win the Nobel Prize in Medicine?",
+    "answer": "Gerty Cori.",
+    "expected_query": "MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE toLower(s.gender) CONTAINS 'female' AND toLower(p.category) CONTAINS 'medicine' RETURN s.knownName ORDER BY p.awardYear ASC LIMIT 1",
+    "context": ["Gerty Theresa Cori, née Radnitz"],
+    "source": "https://en.wikipedia.org/wiki/List_of_Nobel_laureates_in_Physiology_or_Medicine",
+    "typeOfQuestion": "first / last / historical"
+  },
+  {
+    "question": "How many women had received the Nobel Prize in Medicine by 2022?",
+    "answer": "12 women.",
+    "expected_query": "MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE (toLower(s.gender) CONTAINS 'female' OR toLower(s.gender) CONTAINS 'woman') AND toLower(p.category) CONTAINS 'medicine' AND p.awardYear <= 2022 RETURN count(DISTINCT s) AS count",
+    "context": [12],
+    "source": "https://en.wikipedia.org/wiki/List_of_female_Nobel_laureates",
+    "typeOfQuestion": "category / breakdown"
+  },
+  {
+    "question": "Which continent had the highest total number of laureates up to 2022?",
+    "answer": "Europe.",
+    "expected_query": " MATCH (s:Scholar)-[:WON]->(p:Prize),(s)-[:BORN_IN]->(c:City)-[:IS_CITY_IN]->(co:Country)-[:IS_COUNTRY_IN]->(cn:Continent) WHERE p.awardYear <= 2022 WITH cn.name AS continent, count(DISTINCT s.id) AS total ORDER BY total DESC LIMIT 1 RETURN continent",
+    "context": ["Europe"],
+    "source": "https://en.wikipedia.org/wiki/List_of_Nobel_laureates_by_country",
+    "typeOfQuestion": "ranking / comparison"
+  },
+  {
+    "question": "Which country had the most Nobel laureates up to 2022?",
+    "answer": "The United States.",
+    "expected_query": "MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE p.awardYear <= 2022 MATCH (s)-[:BORN_IN]->(c:City)-[:IS_CITY_IN]->(co:Country) WITH co.name AS country, count(DISTINCT s.id) AS laureateCount ORDER BY laureateCount DESC LIMIT 1 RETURN country, laureateCount",
+    "context": ["usa"],
+    "source": "https://en.wikipedia.org/wiki/List_of_Nobel_laureates_by_country",
+    "typeOfQuestion": "ranking / comparison"
+  },
+  {
+    "question": "Which Nobel laureate is the only person to win in both Chemistry and Peace?",
+    "answer": "Linus Pauling.",
+    "expected_query": "MATCH (s:Scholar)-[:WON]->(p1:Prize), (s)-[:WON]->(p2:Prize) WHERE toLower(p1.category) CONTAINS toLower('chemistry') AND toLower(p2.category) CONTAINS toLower('peace') RETURN DISTINCT s.knownName",
+    "context": ["Linus Carl Pauling"],
+    "source": "https://en.wikipedia.org/wiki/List_of_multiple_Nobel_laureates",
+    "typeOfQuestion": "unique / special fact"
+  },
+  {
+    "question": "Who was the first laureate to receive two Nobel Prizes?",
+    "answer": "Marie Curie (Physics 1903, Chemistry 1911).",
+    "expected_query": "MATCH (s:Scholar)-[:WON]->(p2:Prize) WITH s, p2.awardYear AS y2 MATCH (s)-[:WON]->(p1:Prize) WHERE p1.awardYear < y2 WITH s, y2, count(DISTINCT p1) AS lessCount WHERE lessCount = 1 WITH s, min(y2) AS secondYear ORDER BY secondYear ASC LIMIT 1 RETURN s.knownName AS knownName",
+    "context": ["Marie Curie"],
+    "source": "https://en.wikipedia.org/wiki/List_of_Nobel_laureates",
+    "typeOfQuestion": "unique / special fact"
+  }, 
+  {
+    "question": "How many awards that Albert Einstein win, what are they?",
+    "answer": "Albert Einstein won 1 award: Physics prize awarded in 1921",
+    "expected_query": "MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE toLower(s.knownName) CONTAINS toLower('Albert Einstein') RETURN count(DISTINCT p) AS awardCount, collect(DISTINCT {prize_id: p.prize_id, category: p.category, awardYear: p.awardYear}) AS awards",
+    "context": [1, ["physics"]],
+    "source": "https://en.wikipedia.org/wiki/List_of_Nobel_laureates_in_Physics",
+    "typeOfQuestion": "unique / special fact"
+  },
+    {
+    "question": "Max Planck is the famous German scientist. He is named for a reputate institution now. He has Nobel Prize or not, and if yes when?",
+    "answer": "Yes — he won the Nobel Prize in 1918.",
+    "expected_query": "   MATCH (s:Scholar) WHERE toLower(s.knownName) CONTAINS 'max planck' OPTIONAL MATCH (s)-[:WON]->(p:Prize) WITH s, collect(DISTINCT p.awardYear) AS yrs, count(p) AS c RETURN CASE WHEN c > 0 THEN true ELSE false END AS hasNobel, yrs AS awardYears",
+    "context": [1918],
+    "source": "https://en.wikipedia.org/wiki/List_of_Nobel_laureates_in_Physics",
+    "typeOfQuestion": "unique / special fact"
+  },
+      {
+    "question": "List all Nobel Laurates in 2010",
+    "answer": "The Nobel Laureates in 2010 were Andre Geim, Robert G. Edwards, Ei-ichi Negishi, Richard F. Heck, Peter A. Diamond, Akira Suzuki, Dale T. Mortensen, Konstantin Novoselov, and Christopher A. Pissarides.",
+    "expected_query": "   MATCH (s:Scholar)-[:WON]->(p:Prize) WHERE p.awardYear = 2010 RETURN s.knownName",
+    "context": ["Andre Geim", "Robert G. Edwards", "Ei-ichi Negishi", "Richard F. Heck", "Peter A. Diamond", "Akira Suzuki", "Dale T. Mortensen", "Konstantin Novoselov", "Christopher A. Pissarides"],
+    "source": "",
+    "typeOfQuestion": "unique / special fact"
+  }
+]

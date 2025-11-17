@@ -2,6 +2,7 @@
 
 Source code for course project to build a Graph RAG with Kuzu, [DSPy](https://dspy.ai/) and [marimo](https://docs.marimo.io/) (open source, reactive notebooks for Python).
 
+📄 **[Read the full project requirements (PDF)](./CS_E4780_Course_Project_2_Enhancing-LLM-Inference-with-GraphRAG-2.pdf)** for detailed courses requirements
 📄 **[Read the full project report (PDF)](./GraphRAG_Nobel_Prize-3.pdf)** for detailed system architecture, evaluation results, and analysis.
 
 ## Setup
